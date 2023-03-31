@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <?!= include('5.Views/libs/materialize.min.css'); ?>
+  </head>
+  <body>
+
+
+<div class="container" >
+
+
+<div class="row">
+<form class="col s12" onsubmit="return false">
+<input type="hidden" name="Id" id="Id" value="">
+
+<div class="row">
+  <div class="input-field col s6">
+    <input id="Tache" type="text" class="validate" >
+    <label for="Tache">Tâche</label>
+  </div>
+  <div class="input-field col s6">
+    <select id="Question" name="Question">
+    </select>
+    <label for="Etat">Question</label>
+  </div>
+  <div class="input-field col s4">
+    <select id="Phase" name="Phase" class="validate">
+    </select>
+    <label for="PhaseToString">PhaseToString</label>
+  </div>
+  
+  <div class="input-field col s4">
+    <input id="ProjetToString" type="text" disabled class="validate" >
+    <label for="ProjetToString">Projet</label>
+  </div>
+  <div class="input-field col s4">
+    <select id="Membre" name="Membre" class="validate">
+    </select>
+    <label for="Membre">Membre</label>
+  </div>
+
+  
+  <div class="input-field col s4">
+    <select id="Etat" name="Etat">
+      <option value="A faire">A faire</option>
+      <option value="En cours">En cours</option>
+      <option value="En validation">En validation</option>
+      <option value="En confirmation">En confirmation</option>
+      <option value="En pause">En pause</option>
+      <option value="Terminée">Terminée</option>
+    </select>
+    <label for="Etat">Etat</label>
+  </div>
+  <div class="input-field col s4">
+    <input id="DateDebut" type="text" class="datepicker validate" >
+    
+
+    <label for="DateDebut">Date début</label>
+  </div>
+  <div class="input-field col s4">
+    <input id="DateFin" type="text" class="datepicker validate" >
+    <label for="DateFin">Date début</label>
+  </div>
+
+  <div class="input-field col s6">
+  <input id="Livrable" type="text" class="validate">
+  <label for="Livrable">Livrable</label>
+  </div>
+
+  <div class="input-field col s6">
+  <input id="References" type="text" class="validate" >
+  <label for="References">References</label>
+  </div>
+
+  <div class="input-field col s12">
+
+  <textarea id="Remarques" type="text" class="materialize-textarea validate" ></textarea>
+  <label for="Remarques">Remarques</label>
+  </div>
+
+  <div class="col s12">
+      <button class="btn waves-effect waves-light" onclick="save()"  name="action">Enregistrer
+          <i class="material-icons right">send</i>
+      </button>
+  </div>
+</div>
+</form>
+</div>  
+</div>
+     
+<?!= include('5.Views/libs/jquery-3.2.1'); ?>
+<?!= include('5.Views/libs/materialize.min.js'); ?>
+
+<script>
+  // Parse JSON Data generated from Template Form 
+  var idProjet = parseInt(<?= idProjet ?>);
+  var entity =  JSON.parse("<?= jsonEntity ?>");
+  var questions =  JSON.parse("<?= questions ?>");
+  var phasesProjet =  JSON.parse("<?= phasesProjet ?>");
+  var membres =  JSON.parse("<?= membres ?>");
+  $(document).ready(function () {
+    console.log("Edit de l'entity : ");console.log(entity);
+    // init Select Tags
+    questions.forEach(question=> { $('#Question').append($("<option></option>").attr("value", question.Question).text(question.Question)); });
+    phasesProjet.forEach(phaseProjet=> { $('#Phase').append($("<option></option>").attr("value", phaseProjet.Nom).text(phaseProjet.Nom));});
+    membres.forEach(membre=> { $('#Membre').append($("<option></option>").attr("value", membre.Nom + " " + membre.Prenom).text(membre.Nom + " " + membre.Prenom));});
+    // set inputs values
+    let values = Object.entries(entity).forEach(value => {
+      $("#" + value[0]).val( value[1]);
+    });
+    // Traitement spécifique des valeurs de type Date
+    $('.datepicker').datepicker();
+    if(entity.DateDebut){
+      let instance = M.Datepicker.getInstance(document.getElementById('DateDebut'));
+      instance.setDate(entity.DateDebut);
+      instance.setInputValue();
+    }
+    if(entity.DateFin){
+      let instance = M.Datepicker.getInstance(document.getElementById('DateFin'));
+      instance.setDate(entity.DateFin);
+      instance.setInputValue();
+    }
+    // Init and Update Materialize components values
+    $('select').formSelect();
+    M.updateTextFields();
+  });
+
+  function save()
+  { 
+    let updatedEntity = {};
+    // Lire les valeurs du formulaire 
+    let entries = Object.entries(entity);
+    entries.forEach(value => {
+        let val = $("#" + value[0]).val()
+        updatedEntity[value[0]] = $("#" + value[0]).val();
+    });
+
+    // convertire les valeur numérique en leurs types
+    updatedEntity.Id =  parseInt (updatedEntity.Id);
+    // updatedEntity.IdPhaseProjet =  parseInt (updatedEntity.IdPhaseProjet);
+    // updatedEntity.IdQuestion =  parseInt (updatedEntity.IdQuestion);
+    // updatedEntity.IdMembre =  parseInt (updatedEntity.IdMembre);
+    updatedEntity.IdProjet =  parseInt (idProjet);
+
+    // problème de date
+    let instance = M.Datepicker.getInstance(document.getElementById('DateDebut'));
+    if(instance.date) updatedEntity.DateDebut = JSON.stringify(instance.date);
+    instance = M.Datepicker.getInstance(document.getElementById('DateFin'));
+    if(instance.date) updatedEntity.DateFin = JSON.stringify(instance.date);
+
+    console.log(updatedEntity);
+    google.script.run.SaveEntityRowGmView(updatedEntity)
+    google.script.host.close();
+ 
+}
+</script>
+</body>
+</html>
